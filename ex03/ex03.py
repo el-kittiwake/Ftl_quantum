@@ -1,15 +1,17 @@
 """
 Exercise 03: Deutsch-Jozsa Algorithm
-You have to recreate the Deutsch-Jozsa algorithm, it should work with a total number of 3 qubits.
-When applying your algorithm, your circuit should be able to determine whether the
-Oracle is Constant or Balanced, based on the measurement of your Qubits.
-• Your Qubits must be 1 if the Oracle is Balanced.
-• Your Qubits must be 0 if the Oracle is Constant.
+    "You have to recreate the Deutsch-Jozsa algorithm, it should work with a total
+    number of 3 qubits. When applying your algorithm, your circuit should be able
+    to determine whether the Oracle is Constant or Balanced, based on the measurement
+    of your Qubits.
+        • Your Qubits must be 1 if the Oracle is Balanced.
+        • Your Qubits must be 0 if the Oracle is Constant."
 
 https://en.wikipedia.org/wiki/Deutsch%E2%80%93Jozsa_algorithm
 
-If this requires a virtual environment, make sure to activate it first.
-`source .venv/bin/activate`
+    !!!!  If this requires a virtual environment, make sure to activate it first.
+    !!!!  `python3 -m venv .venv`
+    !!!!  `source .venv/bin/activate`
 
 Apparently Python desires snake_case for variable and function names,
 so I'll reluctantly follow that convention here.
@@ -29,13 +31,10 @@ import sys
 
 try:
     import matplotlib.pyplot as plt
-    from matplotlib.ticker import FuncFormatter
 except ImportError:
     print("installing matplotlib...")
-    # Runs the `python3 -m pip install --quiet matplotlib` command to install matplotlib
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "matplotlib"])
     import matplotlib.pyplot as plt
-    from matplotlib.ticker import FuncFormatter
     print("installed matplotlib.")
 
 try:
@@ -143,17 +142,23 @@ def plotResults(probZeros, expected_constant):
         }
     }
     cfg = config[expected_constant]
-    
-    plt.subplot(1, 2, cfg['subplot'])
-    x_positions = [0, 0.5]
-    plt.bar(x_positions, [probZeros, 1 - probZeros], color=cfg['color'], width=0.4)
-    plt.ylabel('Probability')
-    plt.title(cfg['title'])
-    plt.xticks(x_positions, cfg['labels'])
-    plt.xlim([-0.3, 0.8])
-    plt.ylim([0, 1.1])
-    plt.grid(axis='y', alpha=0.6, linestyle='--')
-    plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda y, _: '{:.2f}'.format(y)))
+    probs = [probZeros, 1 - probZeros]
+
+    # Create subplot axes and draw bars
+    ax = plt.subplot(1, 2, cfg['subplot'])
+    bars = ax.bar([0, 0.5], probs, color=cfg['color'], width=0.4)
+    ax.set_ylabel('Probability')
+    ax.set_title(cfg['title'])
+    ax.set_xticks([0, 0.5])
+    ax.set_xticklabels(cfg['labels'])
+    ax.set_xlim([-0.3, 0.8])
+    for bar, prob in zip(bars, probs):
+        # Place the probability value as text centred above the bar, display 3 decimal places
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{prob:.3f}',
+                ha='center', va='bottom')
+    # Set y-axis ceiling to 0.1 above the tallest bar so labels aren't clipped
+    ax.set_ylim(0, max(probs) + 0.1)
+    ax.grid(axis='y', alpha=0.6, linestyle='--')
 
 # ============================================================================
 # ----------------------------------- SETUP ------------------------------------
@@ -181,27 +186,22 @@ final_gates = [cirq.H(q) for q in input_qubits]
 # Define measurement
 measure_gates = cirq.measure(*input_qubits, key='result')
 
-# ============================================================================
-# TEST 1: Circuit with CONSTANT ORACLE
-# ============================================================================
+
+# ------------------ TEST 1: Circuit with CONSTANT ORACLE --------------------
 print("\n" + "="*60)
 print("TESTING CONSTANT ORACLE")
 print("="*60)
 
 prob_zeros_const = run_test(oracle_func, expected_constant=True)
 
-# ============================================================================
-# TEST 2: Circuit with BALANCED ORACLE
-# ============================================================================
+# ------------------ TEST 2: Circuit with BALANCED ORACLE ------------------ 
 print("\n" + "="*60)
 print("TESTING BALANCED ORACLE")
 print("="*60)
 
 prob_zeros_bal = run_test(oracle_func, expected_constant=False)
 
-# ============================================================================
-# VISUALIZATION: Compare both oracles
-# ============================================================================
+#  ------------------ VISUALIZATION: Compare both oracles ------------------ 
 plt.figure(figsize=(14, 6))
 plt.suptitle('Deutsch-Jozsa Algorithm: Oracle Classification', fontsize=14)
 plotResults(prob_zeros_const, expected_constant=True)

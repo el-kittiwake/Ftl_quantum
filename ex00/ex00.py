@@ -1,14 +1,21 @@
-# Exercise 00
-# Write a program that will produce a quantum circuit with a single qubit to obtain this
-# 1/√2 (|0⟩ + |1⟩) state using the principle of quantum superposition.
-# The program should display a visual of the circuit, then run it on a quantum simulator
-# with 500 shots and then display the results in a plot_histogram
+"""
+Exercise 00: Superposition
+    "Write a program that will produce a quantum circuit with a single qubit to
+    obtain this 1/√2 (|0⟩ + |1⟩) state. This demonstrates the principle of quantum
+    superposition. The program should display a visual of the circuit, then run
+    it on a quantum simulator with 500 shots and then display the results in a bar plot."
 
-# |0⟩ = (1 0) and |1⟩ = (0 1) but in column form. 
-# So the state 1/√2 (|0⟩ + |1⟩) is represented as 1/√2 (1 0) + 1/√2 (0 1) = (1/√2 1/√2) in column form.
+|0⟩ = (1 0) and |1⟩ = (0 1) but in column form. 
+So the state 1/√2 (|0⟩ + |1⟩) is represented as 1/√2 (1 0) + 1/√2 (0 1) = (1/√2 1/√2) in column form.
 
-# If this requires a virtual environment, make sure to activate it first.
-# source venv/bin/activate
+   !!!!  If this requires a virtual environment, make sure to activate it first.
+   !!!!  `python3 -m venv .venv`
+   !!!!  `source .venv/bin/activate`
+"""
+
+# ============================================================================
+# ------------------------------ IMPORT DEPENDENCIES ---------------------------
+# ============================================================================
 
 # Allows the script to be run without cirq being installed, and will install it if needed.
 # Allows running of shell commands
@@ -16,10 +23,14 @@ import subprocess
 # Allows access to system-specific parameters and functions
 import sys
 
-# For plotting the results
-import matplotlib.pyplot as plt
-# Needed to format the y-axis of the plot to show probabilities with two decimal places
-from matplotlib.ticker import FuncFormatter
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    print("installing matplotlib...")
+    # Runs the `python3 -m pip install --quiet matplotlib` command to install matplotlib
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "matplotlib"])
+    import matplotlib.pyplot as plt
+    print("installed matplotlib.")
 
 try:
     import cirq
@@ -29,6 +40,10 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "cirq"])
     import cirq
     print("installed cirq.")
+
+# ============================================================================
+# -------------------------- EXERCISE 00 CODE STARTS HERE --------------------
+# ============================================================================
 
 # Create a single qubit at row 0, column 0 of a grid.
 qubit = cirq.GridQubit(0, 0)
@@ -46,27 +61,16 @@ reps = 500
 simulator = cirq.Simulator()
 result = simulator.run(circuit, repetitions=reps)
 
-# Calculate probabilities of measuring 1s and 0s.
-resStr = str(result)
-ones = resStr.count('1')
-zeros = resStr.count('0')
-probOnes = ones / reps
-probZeros = zeros / reps
-
-# Create a plot of the probabilities
-# This is a pain
-plt.figure(figsize=(10, 8))
-plt.bar([0, 0.5], [probZeros, probOnes], color=['blue', 'blue'], width=0.4)
-plt.ylabel('Probabilities')
-# x tick location and labels
-plt.xticks([0, 0.5], ['0', '1'])
-# x limits, addes padding to either side
-plt.xlim([-0.3, 0.8])
-# max probability, add 0.1 for padding
-maxProb = max(probZeros, probOnes) + 0.1
-plt.ylim([0, maxProb])
-# Grid lines, on y, 60% opaque, dashed style
-plt.grid(axis='y', alpha=0.6, linestyle='--')
-# gca () get current axes, yaxis set major formatter to a lambda function that formats the y values to two decimal places
-plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda y, _: '{:.2f}'.format(y)))
+# Create a subplot axes and let cirq draw the histogram (counts) onto it
+ax = plt.subplot()
+cirq.plot_state_histogram(result, ax)
+ax.set_ylabel('Probability')
+for bar in ax.patches:
+    # Rescale each bar from raw count to probability (count / total shots)
+    bar.set_height(bar.get_height() / reps)
+    # Place the probability value as text centred above the bar, display 3 decimal places
+    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{bar.get_height():.3f}',
+            ha='center', va='bottom')
+# Set y-axis ceiling to 0.1 above the tallest bar so labels aren't clipped
+ax.set_ylim(0, max(bar.get_height() for bar in ax.patches) + 0.1)
 plt.show()

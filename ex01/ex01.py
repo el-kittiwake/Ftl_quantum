@@ -1,11 +1,19 @@
-# Exercise 01
-# Write a program that will produce a quantum circuit with two qubits in order to obtain
-# this 1/√2 (|00⟩ + |11⟩) state using the principle of superposition and quantum entanglement.
-# The program must display the circuit, then run it on a quantum simulator with 500
-# shots and then display the results in a plot_histogram.
+"""
+Exercise 01
+    "Write a program that will produce a quantum circuit with two qubits in order
+    to obtain this 1/√2 (|00⟩ + |11⟩) state. This demonstrates the principles of
+    superposition and quantum entanglement. The program must display the circuit,
+    then run it on a quantum simulator with 500 shots and then display the results
+    in a plot_histogram."
 
-# If this requires a virtual environment, make sure to activate it first.
-# source venv/bin/activate
+   !!!!  If this requires a virtual environment, make sure to activate it first.
+   !!!!  `python3 -m venv .venv`
+   !!!!  `source .venv/bin/activate`
+"""
+
+# ============================================================================
+# ------------------------------ IMPORT DEPENDENCIES ---------------------------
+# ============================================================================
 
 # Allows the script to be run without cirq being installed, and will install it if needed.
 # Allows running of shell commands
@@ -13,10 +21,14 @@ import subprocess
 # Allows access to system-specific parameters and functions
 import sys
 
-# For plotting the results
-import matplotlib.pyplot as plt
-# Needed to format the y-axis of the plot to show probabilities with two decimal places
-from matplotlib.ticker import FuncFormatter
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    print("installing matplotlib...")
+    # Runs the `python3 -m pip install --quiet matplotlib` command to install matplotlib
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "matplotlib"])
+    import matplotlib.pyplot as plt
+    print("installed matplotlib.")
 
 try:
     import cirq
@@ -26,6 +38,10 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "cirq"])
     import cirq
     print("installed cirq.")
+
+# ============================================================================
+# -------------------------- EXERCISE 01 CODE STARTS HERE --------------------
+# ============================================================================
 
 # Create two qubits at row 0, columns 0 and 1 of a grid.
 # Position doesn't actually matter, but horizontally adjacent is easier to read.
@@ -39,7 +55,7 @@ qubit1 = cirq.GridQubit(0, 1)
 # https://en.wikipedia.org/wiki/Quantum_logic_gate#Hadamard_gate
 # https://en.wikipedia.org/wiki/Bell_state
 circuit = cirq.Circuit(cirq.X(qubit0) ** 0.5, cirq.CNOT(qubit0, qubit1),
-                       cirq.measure(qubit0, key='m0'), cirq.measure(qubit1, key='m1'))
+                       cirq.measure(qubit0, qubit1, key='m'))
 print("Circuit:")
 print(circuit)
 
@@ -48,34 +64,23 @@ reps = 500
 simulator = cirq.Simulator()
 result = simulator.run(circuit, repetitions=reps)
 
-# Calculate probabilities of all possible 2-qubit states.
-# Extract each qubit's results, flatten to 1D array
-m0_results = result.measurements['m0'].flatten()
-m1_results = result.measurements['m1'].flatten()
-# Join each result pair into the combined state.
-# Zip pairs m0 and m1 values, convert to strings, and join into state strings ('00', '01', '10', '11')
-states = [''.join(map(str, [m0, m1])) for m0, m1 in zip(m0_results, m1_results)]
-prob_00 = states.count('00') / reps
-prob_01 = states.count('01') / reps
-prob_10 = states.count('10') / reps
-prob_11 = states.count('11') / reps
+# Expected outcomes for this Bell state are |00⟩ (index 0) and |11⟩ (index 3)
+expected_indices = {0, 3}
 
-# Calculate max probability with padding
-maxProb = max(prob_00, prob_01, prob_10, prob_11) + 0.1
-# Create a plot showing all four states to demonstrate entanglement correlation
-# This is still a pain
-plt.figure(figsize=(10, 8))
-x_positions = [0, 0.5, 1.0, 1.5]
-probabilities = [prob_00, prob_01, prob_10, prob_11]
-plt.bar(x_positions, probabilities, color=['blue', 'red', 'red', 'blue'], width=0.4)
-plt.ylabel('Probabilities')
-# x tick location and labels
-plt.xticks(x_positions, ['|00⟩', '|01⟩', '|10⟩', '|11⟩'])
-# x limits, add padding to either side
-plt.xlim([-0.3, 1.8])
-plt.ylim([0, maxProb])
-# Grid lines, on y, 60% opaque, dashed style
-plt.grid(axis='y', alpha=0.6, linestyle='--')
-# gca () get current axes, yaxis set major formatter to a lambda function that formats the y values to two decimal places
-plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda y, _: '{:.2f}'.format(y)))
+# Create a subplot axes and let cirq draw the histogram (counts) onto it
+ax = plt.subplot()
+cirq.plot_state_histogram(result, ax)
+ax.set_ylabel('Probability')
+# Override x-axis labels with ket notation
+ax.set_xticklabels(['|00⟩', '|01⟩', '|10⟩', '|11⟩'])
+for i, bar in enumerate(ax.patches):
+    # Rescale each bar from raw count to probability (count / total shots)
+    bar.set_height(bar.get_height() / reps)
+    # Blue for expected Bell state outcomes (|00⟩, |11⟩), red for unexpected
+    bar.set_color('blue' if i in expected_indices else 'red')
+    # Place the probability value as text centred above the bar, display 3 decimal places
+    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{bar.get_height():.3f}',
+            ha='center', va='bottom')
+# Set y-axis ceiling to 0.1 above the tallest bar so labels aren't clipped
+ax.set_ylim(0, max(bar.get_height() for bar in ax.patches) + 0.1)
 plt.show()

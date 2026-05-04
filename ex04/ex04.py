@@ -1,6 +1,6 @@
 """
 Exercise 04: Search algorithm
-    The search algorithm, the ultimate goal of this project.
+    "The search algorithm, the ultimate goal of this project.
     Your algorithm should search for one or more items that meet a given requirement among
     N unclassified items.
         • On a traditional computer, the complexity of the problem is O(N).
@@ -12,7 +12,11 @@ Exercise 04: Search algorithm
     Your algorithm will take a Y number of qubits (minimum 2) and must not require
     any modification to work.
     Similar to the Deutsch-Jozsa algorithm, several Oracles will be provided during the
-    evaluation to verify that your algorithm is working properly.
+    evaluation to verify that your algorithm is working properly."
+
+This algorithm is limited by the k value (number of targets), it gets less
+effective once it equals or becomes greater than N/2.
+https://en.wikipedia.org/wiki/Grover%27s_algorithm#Multiple_matching_entries
 
 Classical computing could get away with checking once. However to guarantee
 finding the target it would have to check every member of N.
@@ -24,8 +28,9 @@ at the same time. The oracle is designed to steer the search towards the correct
 target, so marks the desired state for the diffuser to act on. The diffuser
 repeatedly amplifies the probability of the target.
 
-!! If this requires a virtual environment, make sure to activate it first.    !!
-!! `source .venv/bin/activate`                                                !!
+    !!!!  If this requires a virtual environment, make sure to activate it first.
+    !!!!  `python3 -m venv .venv`
+    !!!!  `source .venv/bin/activate`
 """
 
 # ============================================================================
@@ -66,7 +71,7 @@ except ImportError:
 # ============================================================================
 
 # --------------------------------- RUN FUNCTION -----------------------------
-def run_simulation(num_qubits, target_scheme, reps=500):
+def run_simulation(num_qubits, target_scheme, reps=1000):
     """
     Run the quantum search algorithm:
         Initialise the system with a uniform superposition over all states (H gate)
@@ -87,7 +92,7 @@ def run_simulation(num_qubits, target_scheme, reps=500):
     # Number of iterations
     # Generally (π/4) * √N -  where N = 2^num_qubits
     # However as we are allowing multiple target strings we need to take those into account.
-    # This may not be needed, but I don't know how the evaluation will implement the testing.
+    # This k value is part of the main limitation of this algorithm.
     N = 2 ** num_qubits
     k = len(target_scheme)
     # Tried round() here first, but led to incorrect results for 2 qubits
@@ -132,23 +137,21 @@ def run_simulation(num_qubits, target_scheme, reps=500):
     probabilities = [counts[s] / reps for s in all_states]
     max_prob = max(probabilities)
 
-    # Plot results as a bar chart
-    # figsize in inches (remnant of MATLAB days), scaled to number of qubits
-    # Still awkward, but better than fixed size.
+    # Plot results as a bar chart, scaled to number of qubits
+    x_positions = range(len(all_states))
     _, ax = plt.subplots(figsize=(max(8, 2 ** num_qubits * 0.5), 5))
-    # Bar graph, labels on top of bars, formatted to 2 decimal places
-    # Left and right margin to prevent waste of space on larger amounts of qubits
-    bars = ax.bar(all_states, probabilities)
+    bars = ax.bar(x_positions, probabilities, color='blue')
+    ax.set_ylabel("Probability")
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(all_states, rotation=45)
     ax.margins(x=0.01)
-    ax.bar_label(bars, fmt="%.3f", padding=3, fontsize=8)
-    ax.set_ylabel("Probabilities")
-    # Upper limit for y axis (max prob + 0.1)
+    for bar, prob in zip(bars, probabilities):
+        # Place the probability value as text centred above the bar, display 3 decimal places
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{prob:.3f}',
+                ha='center', va='bottom', fontsize=8)
+    # Set y-axis ceiling to 0.1 above the tallest bar so labels aren't clipped
     ax.set_ylim(0, max_prob + 0.1)
-    # Rotate x axis labels by 45 degrees for space saving
-    ax.tick_params(axis="x", labelrotation=45)
-    # Grid lines, on y, 60% opaque, dashed style
-    plt.grid(axis='y', alpha=0.6, linestyle='--')
-    # tight_layout ensures nothing gets clipped
+    ax.grid(axis='y', alpha=0.6, linestyle='--')
     plt.tight_layout()
     plt.show()
 
@@ -160,6 +163,7 @@ def build_oracle(qubits, target_scheme):
     For each target bitstring (example: "101")
         1. For every qubit that is '0', apply X (flip to 1)
         2. Apply a multi-controlled Z on last qubit
+            Controlled Z results in a cleaner but equivalent layout to using H→CNOT→H
         3. Apply X again to qubits from step 1
 
     Args:
@@ -203,6 +207,7 @@ def build_diffuser(qubits):
 
     Method:
         H on all → X on all → controlled-Z → X on all → H on all
+        Controlled Z results in a cleaner but equivalent layout to using H→CNOT→H
 
     Args:
         qubits: Qubit array to be operated on.
