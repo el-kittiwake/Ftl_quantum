@@ -28,6 +28,7 @@ a python framework so the porting of ex01 should not be too complicated.
     !!!!  If this requires a virtual environment, make sure to activate it first.
     !!!!  `python3 -m venv .venv`
     !!!!  `source .venv/bin/activate`
+    !!!!  `pip install --quiet qiskit qiskit-ibm-runtime qiskit-aer matplotlib cirq`
 """
 
 # ============================================================================

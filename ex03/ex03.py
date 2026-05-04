@@ -1,7 +1,7 @@
 """
 Exercise 03: Deutsch-Jozsa Algorithm
     "You have to recreate the Deutsch-Jozsa algorithm, it should work with a total
-    number of 3 qubits. When applying your algorithm, your circuit should be able
+    number of 4 qubits. When applying your algorithm, your circuit should be able
     to determine whether the Oracle is Constant or Balanced, based on the measurement
     of your Qubits.
         • Your Qubits must be 1 if the Oracle is Balanced.
@@ -12,11 +12,10 @@ https://en.wikipedia.org/wiki/Deutsch%E2%80%93Jozsa_algorithm
     !!!!  If this requires a virtual environment, make sure to activate it first.
     !!!!  `python3 -m venv .venv`
     !!!!  `source .venv/bin/activate`
+    !!!!  `pip install --quiet matplotlib cirq`
 
 Apparently Python desires snake_case for variable and function names,
 so I'll reluctantly follow that convention here.
-
-Just learned about docstrings, now the time is ripe to overdo them!
 """
 
 # ============================================================================
@@ -76,17 +75,43 @@ def oracle_func(input_qubits, output_qubit, constant=False):
     """
     if constant:
         # Oracle for a constant function
+        # For f(x)=1, do X() on final qubit
+        #return cirq.Circuit(cirq.X(output_qubit))
+        # For f(x)=0, do nothing
         return cirq.Circuit()
     else:
         # Oracle for a balanced function
-        return cirq.Circuit(cirq.CNOT(q, output_qubit) for q in input_qubits)
+        oracle_circuit = cirq.Circuit()
+
+        oracle_circuit.append(cirq.X(input_qubits[0]))
+        oracle_circuit.append(cirq.X(input_qubits[1]))
+        oracle_circuit.append(cirq.X(input_qubits[2]))
+        oracle_circuit.append(cirq.CNOT(input_qubits[0], output_qubit))
+        oracle_circuit.append(cirq.CNOT(input_qubits[1], output_qubit))
+        oracle_circuit.append(cirq.CNOT(input_qubits[2], output_qubit))
+        oracle_circuit.append(cirq.X(input_qubits[0]))
+        oracle_circuit.append(cirq.X(input_qubits[1]))
+        oracle_circuit.append(cirq.X(input_qubits[2]))
+
+        return oracle_circuit
+
 
 def run_test(oracle_func, expected_constant, reps=500):
     """
     Runs the test with the given oracle function and expected type
     Builds the circuit, simulates it, and calculates the probability of measuring |000⟩.
     Prints whether the results match the expected outcome based on the oracle type.
-    
+
+    Method of operation:
+        Initially all inputs are put into superposition, H().
+        Output is set up as phase kickback target X()+H().
+            - Phase kickback is when a controlled operation C<operation>() changes
+              the phase of the control rather than the target.
+        Oracle encodes phases of the desired circuit f(x).
+        Final H() undoes the initial H() but keeps the phase changes in place.
+            - Constant: phases reinforce each other
+            - Balanced: phases cancel each other
+
     Args:
         oracle_func: The oracle function to test
         expected_constant: Whether we expect a constant oracle
@@ -131,13 +156,13 @@ def plotResults(probZeros, expected_constant):
         True: {
             'subplot': 1,
             'title': 'Constant Oracle Results',
-            'color': ['blue', 'lightblue'],
+            'color': ['blue', 'red'],
             'labels': ['|000⟩\n(Expected)', 'Other States']
         },
         False: {
             'subplot': 2,
             'title': 'Balanced Oracle Results',
-            'color': ['red', 'lightcoral'],
+            'color': ['pink', 'lightblue'],
             'labels': ['|000⟩\n(Unexpected)', 'Other States\n(Expected)']
         }
     }
@@ -161,50 +186,50 @@ def plotResults(probZeros, expected_constant):
     ax.grid(axis='y', alpha=0.6, linestyle='--')
 
 # ============================================================================
-# ----------------------------------- SETUP ------------------------------------
+# ----------------------------------- MAIN ------------------------------------
 # ============================================================================
 
-# Create 3 input qubits at row 0, columns 0-2 of a grid.
-# Could probably use LineQubit, but grid seems more intuitive.
-input_qubits = [cirq.GridQubit(0, i) for i in range(3)]
-# Create 1 output qubit at row 1, column 0 of the grid.
-# This qubit will not be measured, but is required for the algorithm. (CNOT)
-output_qubit = cirq.GridQubit(1, 0)
+if __name__ == "__main__":
+    # Create 3 input qubits at row 0, columns 0-2 of a grid.
+    # Could probably use LineQubit, but grid seems more intuitive.
+    input_qubits = [cirq.GridQubit(0, i) for i in range(3)]
+    # Create 1 output qubit at row 1, column 0 of the grid.
+    # This qubit will not be measured, but is required for the algorithm. (CNOT)
+    output_qubit = cirq.GridQubit(1, 0)
 
-# Define initial gates: Put input qubits into superposition
-# This creates all possible input combinations in superposition
-initial_gates = [cirq.H(q) for q in input_qubits]
+    # Define initial gates: Put input qubits into superposition
+    # This creates all possible input combinations in superposition
+    initial_gates = [cirq.H(q) for q in input_qubits]
 
-# Define output qubit preparation: |1⟩ state in superposition (1/√2(|0⟩ - |1⟩))
-# This is needed for the phase kickback to work
-output_gates = [cirq.X(output_qubit), cirq.H(output_qubit)]
+    # Define output qubit preparation: |1⟩ state in superposition (1/√2(|0⟩ - |1⟩))
+    # This is needed for the phase kickback to work
+    output_gates = [cirq.X(output_qubit), cirq.H(output_qubit)]
 
-# Define final gates: Apply Hadamard again to input qubits
-# This is where quantum interference happens - distinguishes constant from balanced
-final_gates = [cirq.H(q) for q in input_qubits]
+    # Define final gates: Apply Hadamard again to input qubits
+    # This is where quantum interference happens - distinguishes constant from balanced
+    final_gates = [cirq.H(q) for q in input_qubits]
 
-# Define measurement
-measure_gates = cirq.measure(*input_qubits, key='result')
+    # Define measurement
+    measure_gates = cirq.measure(*input_qubits, key='result')
 
+    # ------------------ TEST 1: Circuit with CONSTANT ORACLE --------------------
+    print("\n" + "="*60)
+    print("TESTING CONSTANT ORACLE")
+    print("="*60)
 
-# ------------------ TEST 1: Circuit with CONSTANT ORACLE --------------------
-print("\n" + "="*60)
-print("TESTING CONSTANT ORACLE")
-print("="*60)
+    prob_zeros_const = run_test(oracle_func, expected_constant=True)
 
-prob_zeros_const = run_test(oracle_func, expected_constant=True)
+    # ------------------ TEST 2: Circuit with BALANCED ORACLE ------------------
+    print("\n" + "="*60)
+    print("TESTING BALANCED ORACLE")
+    print("="*60)
 
-# ------------------ TEST 2: Circuit with BALANCED ORACLE ------------------ 
-print("\n" + "="*60)
-print("TESTING BALANCED ORACLE")
-print("="*60)
+    prob_zeros_bal = run_test(oracle_func, expected_constant=False)
 
-prob_zeros_bal = run_test(oracle_func, expected_constant=False)
-
-#  ------------------ VISUALIZATION: Compare both oracles ------------------ 
-plt.figure(figsize=(14, 6))
-plt.suptitle('Deutsch-Jozsa Algorithm: Oracle Classification', fontsize=14)
-plotResults(prob_zeros_const, expected_constant=True)
-plotResults(prob_zeros_bal, expected_constant=False)
-plt.tight_layout()
-plt.show()
+    #  ------------------ VISUALIZATION: Compare both oracles ------------------
+    plt.figure(figsize=(14, 6))
+    plt.suptitle('Deutsch-Jozsa Algorithm: Oracle Classification', fontsize=14)
+    plotResults(prob_zeros_const, expected_constant=True)
+    plotResults(prob_zeros_bal, expected_constant=False)
+    plt.tight_layout()
+    plt.show()

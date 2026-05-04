@@ -8,9 +8,10 @@ Exercise 00: Superposition
 |0⟩ = (1 0) and |1⟩ = (0 1) but in column form. 
 So the state 1/√2 (|0⟩ + |1⟩) is represented as 1/√2 (1 0) + 1/√2 (0 1) = (1/√2 1/√2) in column form.
 
-   !!!!  If this requires a virtual environment, make sure to activate it first.
-   !!!!  `python3 -m venv .venv`
-   !!!!  `source .venv/bin/activate`
+    !!!!  If this requires a virtual environment, make sure to activate it first.
+    !!!!  `python3 -m venv .venv`
+    !!!!  `source .venv/bin/activate`
+    !!!!  `pip install --quiet matplotlib cirq`
 """
 
 # ============================================================================

@@ -31,6 +31,7 @@ repeatedly amplifies the probability of the target.
     !!!!  If this requires a virtual environment, make sure to activate it first.
     !!!!  `python3 -m venv .venv`
     !!!!  `source .venv/bin/activate`
+    !!!!  `pip install --quiet matplotlib cirq`
 """
 
 # ============================================================================
