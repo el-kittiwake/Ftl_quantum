@@ -14,19 +14,37 @@ Exercise 04: Search algorithm
     Similar to the Deutsch-Jozsa algorithm, several Oracles will be provided during the
     evaluation to verify that your algorithm is working properly."
 
+Method of operation (finding |101⟩, 3 qubit system, 8 possible states):
+    1. Initialise all qubits with H(), putting them into superposition.
+        - All states have 0.125 probability.
+        - Mean probability is 0.125.
+    2. Apply The Oracle.
+        - Multiplies the target's state amplitude by -1.
+        - The target's amplitude is now negative.
+        - The mean is now slightly below 0.125.
+    3. Apply the diffuser.
+        - Reflects all amplitudes around the mean.
+            - Positive amplitudes get reduced slightly.
+            - Negative amplitudes get increased significantly.
+    Iteration:
+        The correct number of iterations results in getting very close to the peak.
+            Optimal number given by: (π/4)√N.
+            Too few and the probability never reaches peak.
+            Too many and the probability starts to fall.
+
+Classical method: Open N "doors" one by one, average N/2 attempts, worst case N attempts.
+Grover's: Rotate the probability distribution √N times, then measure.
+          The target is revealed after optimal iterations.
+
+The diffuser doesn't "know" what the target is. It just reflects around the mean.
+The oracle steers the search towards the correct target by flipping its phase.
+Together they rotate the probability distribution toward the target state by a
+fixed angle each iteration. The diffuser repeatedly amplifies the probability of
+the target.
+
 This algorithm is limited by the k value (number of targets), it gets less
 effective once it equals or becomes greater than N/2.
 https://en.wikipedia.org/wiki/Grover%27s_algorithm#Multiple_matching_entries
-
-Classical computing could get away with checking once. However to guarantee
-finding the target it would have to check every member of N.
-
-Quantum computing rotates the probability distribution toward the target state by
-a fixed angle each iteration, requiring only √N rotations to guarantee finding it.
-It does this by using superposition to allow for consideration of all states
-at the same time. The oracle is designed to steer the search towards the correct
-target, so marks the desired state for the diffuser to act on. The diffuser
-repeatedly amplifies the probability of the target.
 
     !!!!  If this requires a virtual environment, make sure to activate it first.
     !!!!  `python3 -m venv .venv`
@@ -80,7 +98,7 @@ def run_simulation(num_qubits, target_scheme, reps=1000):
             Apply the desired oracle
             Apply the diffuser
         Measure the resulting quantum state
-        Visualise the results as a probability bar chart (subject copy)
+        Visualise the results as a probability bar chart (as given in the subject)
 
     This algorithm is also known as Grover's algorithm.
 
@@ -91,7 +109,7 @@ def run_simulation(num_qubits, target_scheme, reps=1000):
     """
 
     # Number of iterations
-    # Generally (π/4) * √N -  where N = 2^num_qubits
+    # Generally (π/4) * √N - where N = 2^num_qubits
     # However as we are allowing multiple target strings we need to take those into account.
     # This k value is part of the main limitation of this algorithm.
     N = 2 ** num_qubits
@@ -99,7 +117,7 @@ def run_simulation(num_qubits, target_scheme, reps=1000):
     # Tried round() here first, but led to incorrect results for 2 qubits
     iterations = max(1, maths.floor((maths.pi / 4) * maths.sqrt(N / k)))
 
-    ## Initialisation of states!
+    # Initialisation of states!
     # Similar to Deutsch-Jozsa in a lot of the setup.
     # Create Y number of input qubits using a LineQubit() range
     qubits = cirq.LineQubit.range(num_qubits)
@@ -119,7 +137,7 @@ def run_simulation(num_qubits, target_scheme, reps=1000):
     circuit.append(cirq.measure(*qubits, key="results"))
     print("Circuit:\n", circuit)
 
-    # Run the simulation. Using the subject required 500 reps.
+    # Run the simulation. More reps than the subject's 500 for better probability resolution.
     simulator = cirq.Simulator()
     raw_results = simulator.run(circuit, repetitions=reps)
     result_measurements = raw_results.measurements["results"]
@@ -164,6 +182,7 @@ def build_oracle(qubits, target_scheme):
     For each target bitstring (example: "101")
         1. For every qubit that is '0', apply X (flip to 1)
         2. Apply a multi-controlled Z on last qubit
+            Similar to logical AND, but for phase not value
             Controlled Z results in a cleaner but equivalent layout to using H→CNOT→H
         3. Apply X again to qubits from step 1
 
@@ -188,7 +207,7 @@ def build_oracle(qubits, target_scheme):
             if bit == "0":
                 oracle.append(cirq.X(qubits[i]))
 
-        # 2. Apply a multi-controlled Z on last qubit
+        # 2. Apply a multi-controlled Z (AND but for phase) on last qubit
         oracle.append(cirq.Z.controlled(num_qubits - 1)(*qubits))
 
         # 3. Apply X again to qubits from step 1
@@ -223,6 +242,7 @@ def build_diffuser(qubits):
     # Number of qubits
     num_qubits = len(qubits)
 
+    # .on_each applies the gate to each qubit in the given list
     diffuser.append(cirq.H.on_each(*qubits))
     diffuser.append(cirq.X.on_each(*qubits))
     diffuser.append(cirq.Z.controlled(num_qubits - 1)(*qubits))
@@ -235,12 +255,10 @@ def build_diffuser(qubits):
 # ----------------------------------- MAIN -----------------------------------
 # ============================================================================
 
-"""
-Performs input checks for validation and whether to run the default or not.
-Tries to return meaningful error messages for validation failure.
-Default: 3 qubits, target = 111
-"""
 if __name__ == "__main__":
+    # Performs input checks for validation and whether to run the default or not.
+    # Tries to return meaningful error messages for validation failure.
+    # Default: 3 qubits, target = 111
     if len(sys.argv) < 3:
         num_qubits = 3
         target_scheme = ["111"]

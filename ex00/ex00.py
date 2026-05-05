@@ -5,13 +5,23 @@ Exercise 00: Superposition
     superposition. The program should display a visual of the circuit, then run
     it on a quantum simulator with 500 shots and then display the results in a bar plot."
 
-|0⟩ = (1 0) and |1⟩ = (0 1) but in column form. 
-So the state 1/√2 (|0⟩ + |1⟩) is represented as 1/√2 (1 0) + 1/√2 (0 1) = (1/√2 1/√2) in column form.
+|0⟩ = (1 0) and |1⟩ = (0 1) but transposed (vertical form). 
+So the state 1/√2 (|0⟩ + |1⟩) is represented as 1/√2 (1 0) + 1/√2 (0 1) = (1/√2 1/√2) transposed.
+
+    Braket: 1/√2 (|0⟩ + |1⟩)
+    Meaning: "This qubit has a 50% chance of being measured as 0, and a 50% chance
+    of being measured as 1, and both possibilities have the same phase."
+        1/√2: Amplitude of each outcome. Actual probability: (1/√2)² = 1/2 = 50%.
+        |0⟩ and |1⟩: Possible measurement outcomes. | ⟩ essentially means "quantum state of".
+        +: Both outcomes have the same phase, they'll interfere constructively.
 
     !!!!  If this requires a virtual environment, make sure to activate it first.
     !!!!  `python3 -m venv .venv`
     !!!!  `source .venv/bin/activate`
     !!!!  `pip install --quiet matplotlib cirq`
+
+Apparently Python desires snake_case for variable and function names, so I'll
+reluctantly follow that convention here.
 """
 
 # ============================================================================
@@ -49,12 +59,12 @@ except ImportError:
 # Create a single qubit at row 0, column 0 of a grid.
 qubit = cirq.GridQubit(0, 0)
 
-# Create a circuit that applies a square root of NOT gate, then measures the qubit.
+# Create a circuit that applies a square root of X() (NOT) gate, then measures the qubit.
 # This is the same as a Hadamard gate, which creates a superposition of the two possible outcomes.
 # https://en.wikipedia.org/wiki/Quantum_logic_gate#Hadamard_gate
 # https://en.wikipedia.org/wiki/Schr%C3%B6dinger%27s_cat
 circuit = cirq.Circuit(cirq.X(qubit) ** 0.5, cirq.measure(qubit, key='m'))
-print("Circuit:")
+print("Circuit:\n")
 print(circuit)
 
 # Simulate the above circuit 500 times.
@@ -62,7 +72,8 @@ reps = 500
 simulator = cirq.Simulator()
 result = simulator.run(circuit, repetitions=reps)
 
-# Create a subplot axes and let cirq draw the histogram (counts) onto it
+# Create a subplot and let cirq draw the histogram (counts) onto it
+# https://matplotlib.org/stable/users/index
 ax = plt.subplot()
 cirq.plot_state_histogram(result, ax)
 ax.set_ylabel('Probability')

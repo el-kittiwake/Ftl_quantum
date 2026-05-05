@@ -6,16 +6,35 @@ Exercise 03: Deutsch-Jozsa Algorithm
     of your Qubits.
         • Your Qubits must be 1 if the Oracle is Balanced.
         • Your Qubits must be 0 if the Oracle is Constant."
+        
+Method of operation:
+    Initially all inputs are put into superposition, H().
+    Output is set up as phase kickback target X()+H().
+        - X() changes it to |1⟩ and H() changes it to 1/√2(|0⟩ - |1⟩)
+        - Negative phase means phase will be "kicked back" onto whatever controls it.
+        - Phase kickback is when a controlled operation C<operation>() changes
+            the phase of the control rather than the target.
+    Oracle encodes phases of the desired circuit f(x).
+        - Because the output qubit is in |−⟩, the CNOT cannot flip it
+        - This phase change has to be applied to the control qubit.
+        - So the input_qubit gets the -1 applied to it
+    Final H() undoes the initial H() but keeps the phase changes in place.
+        - H() is its own inverse.
+        - Constant: phases are identical and reinforce each other
+        - Balanced: half the phases have been changed so they cancel each other
+
+A classical computer could need up to 2ⁿ⁻¹+1 calls to f(x) to figure out if it
+is balanced or constant.
+The quantum version calls it once, on all inputs simultaneously, and the
+interference does the classification automagically.
 
 https://en.wikipedia.org/wiki/Deutsch%E2%80%93Jozsa_algorithm
+https://en.wikipedia.org/wiki/Phase_kickback
 
     !!!!  If this requires a virtual environment, make sure to activate it first.
     !!!!  `python3 -m venv .venv`
     !!!!  `source .venv/bin/activate`
     !!!!  `pip install --quiet matplotlib cirq`
-
-Apparently Python desires snake_case for variable and function names,
-so I'll reluctantly follow that convention here.
 """
 
 # ============================================================================
@@ -101,16 +120,6 @@ def run_test(oracle_func, expected_constant, reps=500):
     Runs the test with the given oracle function and expected type
     Builds the circuit, simulates it, and calculates the probability of measuring |000⟩.
     Prints whether the results match the expected outcome based on the oracle type.
-
-    Method of operation:
-        Initially all inputs are put into superposition, H().
-        Output is set up as phase kickback target X()+H().
-            - Phase kickback is when a controlled operation C<operation>() changes
-              the phase of the control rather than the target.
-        Oracle encodes phases of the desired circuit f(x).
-        Final H() undoes the initial H() but keeps the phase changes in place.
-            - Constant: phases reinforce each other
-            - Balanced: phases cancel each other
 
     Args:
         oracle_func: The oracle function to test

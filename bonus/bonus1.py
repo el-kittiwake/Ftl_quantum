@@ -3,13 +3,16 @@ Bonus: Quantum Teleportation
     AKA. The ballad of Alice and Bob.
 
 Transfers the state of one qubit (Q0) to another (Q2) without physically moving it.
-Alice and Bob share a pre-entangled pair of qubits (Q1, Q2). Alice entangles the
-message qubit Q0 with her half of the pair, then measures Q0 and Q1, producing two
-classical bits. She sends these to Bob, who applies correction gates to Q2 based on
-those bits. Q2 then holds exactly the original state of Q0.
+    Alice and Bob share a pre-entangled pair of qubits (Q1, Q2).
+    Alice entangles the message qubit Q0 with her half of the pair.
+        She measures Q0 and Q1, producing two classical bits.
+    Alice sends these to Bob, who applies correction gates to Q2 based on those bits.
+        Q2 then holds exactly the original state of Q0.
 
-Q0 is destroyed by measurement in the process — consistent with the no-cloning theorem.
+Q0 is destroyed by measurement in the process - consistent with the no-cloning theorem.
 No information travels faster than light: the classical bits must be sent conventionally.
+The classical bits act as a "map" of what happened during the measurement.
+The gates X and Z act to undo that and recreate the original state for Bob.
 
     !!!!  If this requires a virtual environment, make sure to activate it first.
     !!!!  `python3 -m venv .venv`
@@ -57,8 +60,9 @@ reps=500
 
 def alice(qubits):
     """
-    Entangles Q1/Q2 into a Bell state.
+    Entangles Q1/Q2 into a Bell state of entanglement.
     Entangles Q0 with Q1.
+        These actions result in a three way entanglement.
     Measures Q0 and Q1.
     Return the circuit fragment.
     """
@@ -86,6 +90,8 @@ def alice(qubits):
 def bob(qubits):
     """
     Applies the classically controlled X and Z corrections to Q2 based on Alice's measurement results.
+        X on Bob (when Q1=1), this corrects a bit flip caused by Alice's CNOT entanglement step
+        Z on Bob (when Q0=1), this corrects a phase flip caused by Alice's H gate step
     Return the circuit fragment.
     """
     circuit = cirq.Circuit()

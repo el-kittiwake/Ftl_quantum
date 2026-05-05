@@ -6,20 +6,49 @@ computer."
 Subject for this is strange because the implication is that exercise 2 needs to
 be a modification of exercise 3?
 In the notes for the exercise it states:
-	"Your results between exercise 3 and 4 should be different, even though the
-    circuit	is identical. It's up to you to understand why."
-Exercise 3 and 4 are totally different algorithms.
+    "Your results between exercise 3 and 4 should be different, even though the
+    circuit is identical. It's up to you to understand why."
+Exercise 3 and 4 are very different algorithms in this file numbering.
 
 It is possible that this exercise is:
-	1. Meant to be after the current exercise 3 (Deutsch-Jozsa).
-	2. In the right location and we are supposed to do the entanglement exercise
+    1. Meant to be after the current exercise 3 (Deutsch-Jozsa).
+    2. In the right location and we are supposed to do the entanglement exercise
         on actual quantum hardware.
 I am assuming 2 and working accordingly.
 
 This exercise will be the real quantum hardware running of exercise 1.
 Quantum entanglement.
 
-However, my choice of Cirq as development framework was poor and I could not
+There are three levels of "reality" in this script, lets say:
+    Level 1: Running locally on a noiseless simulator.
+        This should produce the same result as ex01.
+    Level 2: Running locally on a noisy simulated backend
+        This should produce some noise (01 and 10 results).
+    Level 3: Running on remote quantum hardware
+        This should also produce some noise, and will probably be a greater amount
+        than with level 2.
+
+This exercise requires a .env file with IBM_TOKEN and IBM_SIMULATE values.
+    If an IBM_TOKEN is not present then level 1 will run.
+    If an IBM_TOKEN is present and IBM_SIMULATE is true, then level 2 will run.
+    If an IBM_TOKEN is present and IBM_SIMULATE is false, then level 3 will run.
+
+So, what is noise?
+    1. Decoherence: Qubits deteriorate over time due to environmental interference,
+                    i.e. heat, vibration and EMI effects.
+    2. Gate errors: Real gates don't work as precisely as simulated gates, this
+                    causes some errors which accumulate as the qubits pass through
+                    the circuit.
+    3. Measurement error: As with gates, measurements aren't perfectly precise.
+                          A 0 could be mistakenly read as a 1.
+    4. Crosstalk: Physical qubits on real hardware are close to each other.
+                  This can lead to leakage and one qubit disturbing its neighbour.
+
+All the above (and probably more) is the reason why results for ex01 and ex02
+differ. It is an expected outcome and needs to be considered when doing actual
+work on quantum machines.
+
+Note: my choice of Cirq as development framework was poor and I could not
 get Microsoft Azure (the service I would need to run cirq programs) to work
 without paying. So this exercise will be done in Qiskit, IBM's quantum development
 framework. IBM offer easy access to free tokens for quantum time. Qiskit is also

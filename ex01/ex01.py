@@ -1,10 +1,20 @@
 """
-Exercise 01
+Exercise 01: Entanglement
     "Write a program that will produce a quantum circuit with two qubits in order
     to obtain this 1/√2 (|00⟩ + |11⟩) state. This demonstrates the principles of
     superposition and quantum entanglement. The program must display the circuit,
     then run it on a quantum simulator with 500 shots and then display the results
     in a plot_histogram."
+    
+    Braket: 1/√2 (|00⟩ + |11⟩)
+    Meaning: "This qubit has a 50% chance of being measured as 00, and a 50% chance
+    of being measured as 11, and both possibilities have the same phase."
+        1/√2: Amplitude of each outcome. Actual probability: (1/√2)² = 1/2 = 50%.
+        |00⟩ and |11⟩: Possible measurement outcomes. | ⟩ essentially means "quantum state of".
+        +: Both outcomes have the same phase, they'll interfere constructively.
+    
+    Anything other than 00 and 11 should be impossible, however when you introduce
+    the noise of reality, this can change.
 
    !!!!  If this requires a virtual environment, make sure to activate it first.
    !!!!  `python3 -m venv .venv`
