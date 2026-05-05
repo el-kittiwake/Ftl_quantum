@@ -20,7 +20,10 @@ ex03: .venv/.installed
 ex04: .venv/.installed
 	$(PYTHON) ex04/ex04.py
 
+bonus: .venv/.installed
+	$(PYTHON) bonus/bonus1.py
+
 clean:
 	rm -rf .venv
 
-.PHONY: ex00 ex01 ex02 ex03 ex04 clean
+.PHONY: ex00 ex01 ex02 ex03 ex04 bonus clean

@@ -72,9 +72,10 @@ try:
     from qiskit_ibm_runtime import QiskitRuntimeService
     # The actual simulation running component. like: `simulator.run(circuit, repetitions=500)`
     from qiskit_ibm_runtime import SamplerV2
-    # Noisy fake backend that mimics a real IBM device - used for tier 2 simulation
-    # Fez, Marrakesh and Kingston should all be available. Using Marrakesh (156 qubit)
-    from qiskit_ibm_runtime.fake_provider import FakeMarrakesh
+    # Noisy fake backend that mimics a real IBM device - used for level 2 simulation
+    # Fez, Marrakesh and Kingston should all be available.
+	# Using Fez (156 qubit) as that is what my real runs seem to be using.
+    from qiskit_ibm_runtime.fake_provider import FakeFez
 except ImportError:
     print("installing qiskit-ibm-runtime...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "qiskit-ibm-runtime"])
@@ -175,8 +176,8 @@ def run_noisy(circuit, reps=reps):
     Returns:
         counts: dict of bitstring outcome counts.
     """
-    print("Running local noisy fake backend (FakeMarrakesh). IBM_SIMULATE set to true.\n")
-    fake_backend = FakeMarrakesh()
+    print("Running local noisy fake backend (FakeFez). IBM_SIMULATE set to true.\n")
+    fake_backend = FakeFez()
     pm = generate_preset_pass_manager(backend=fake_backend, optimization_level=1)
     transpiled = pm.run(circuit)
     sampler = SamplerV2(fake_backend)
