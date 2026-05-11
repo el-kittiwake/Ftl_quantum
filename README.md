@@ -10,6 +10,8 @@ So, for the sake of completing this in a reasonable time I did ex02 in IBM Qiski
 
 The evaluation sheet also gives you the code changes required as qiskit snippets. This along with differences in how cirq and qiskit work make it a bad idea to use any other framework than qiskit for these exercises.
 
+For details regarding adapting between different frameworks please see the [Qiskit/Cirq adaptation](#qiskitcirq-adaptation) section below.
+
 ## Usage
 
 ```bash
@@ -26,19 +28,19 @@ make bonus
 make clean
 ```
 
-ex02 requires a `.env` file in the project root, contents below:
+**ex02** requires a `.env` file in the project root, contents below:
 
 ```
 IBM_TOKEN=your_token_here
 IBM_SIMULATE=true   # false to run on real hardware
 ```
 
-If IBM_TOKEN is not present then a local noiseless simulation will run.
-If IBM_TOKEN is present and IBM_SIMULATE is true, then a local noisy simulation (using the FakeFez simulator) will run.
-If IBM_TOKEN is present and IBM_SIMULATE is false, then the circuit will run on an IBM quantum machine (usually Fez, a Heron r2 based machine with 156 qubits).
+- If IBM_TOKEN is not present then a local noiseless simulation will run.
+- If IBM_TOKEN is present and IBM_SIMULATE is true, then a local noisy simulation (using the FakeFez simulator) will run.
+- If IBM_TOKEN is present and IBM_SIMULATE is false, then the circuit will run on an IBM quantum machine (usually Fez, a Heron r2 based machine with 156 qubits).
 
 
-ex04 takes optional parameters to specify the number of qubits and target states:
+**ex04** takes optional parameters to specify the number of qubits and target states:
 
 ```bash
 .venv/bin/python3 ex04/ex04.py <num_qubits> <targets>
@@ -80,9 +82,9 @@ This quantum arrangement has the bra-ket notation: 1/√2 (|0⟩ + |1⟩)
 
 Essentially meaning: "This qubit has a 50% chance of being measured as 0, and a 50% chance of being measured as 1, and both possibilities have the same phase."
 
-1/√2: Amplitude of each outcome. Actual probability: (1/√2)² = 1/2 = 50%.
-|0⟩ and |1⟩: Possible measurement outcomes. | ⟩ essentially means "quantum state of".
-+: Both outcomes have the same phase, they'll interfere constructively.
+- 1/√2: Amplitude of each outcome. Actual probability: (1/√2)² = 1/2 = 50%.
+- |0⟩ and |1⟩: Possible measurement outcomes. | ⟩ essentially means "quantum state of".
+- +: Both outcomes have the same phase, they'll interfere constructively.
 
 
 ### Exercise 1
@@ -104,6 +106,16 @@ Run the entanglement circuit (ex01) on real/simulated IBM quantum hardware using
 2. Gate errors: Real gates don't work as precisely as simulated gates, this causes some errors which accumulate as the qubits pass through the circuit.
 3. Measurement error: As with gates, measurements aren't perfectly precise.
 4. Crosstalk: Physical qubits on real hardware are close to each other. This can lead to leakage and one qubit disturbing its neighbour.
+
+###### IBM architecture
+
+As of completing this project, free allowance quantum work is done on IBM Heron r2 architecture. On the machines: ibm_kingston, ibm_fez or ibm_marrakesh (the latter two have noisy simulator models available).
+
+Each run of this exercise on quantum hardware takes about 2 seconds. This is taken from the monthly free allowance of 10 minutes of compute time.
+
+These machines consist of 156 qubits of the transmon type. Two superconducting metal pads separated by a thin insulator (Josephson junction acting as an inductor) in parallel with a capacitor. The qubits (ergo the quantum chip) need to be chilled down to the tens of millikelvin in order to function.
+
+The qubits are operated on by microwave pulses. State change happens when a microwave pulse of a specific phase, amplitude and length is applied. The qubit can be read by a resonating microwave that changes frequency depending on the energy state of the qubit.
 
 ### Exercise 3
 
